@@ -10,21 +10,76 @@ Si el libro no se encuentra, mostrar un mensaje indicando que no se encontraron 
 */
 
 const getBookFromApi = (endpoint) =>{
-    return fetch(`https://www.googleapis.com/books/v1/volumes?q=el%20señor%20de%20los%20anillos`)
+    return fetch(`https://www.googleapis.com/books/v1/volumes?q=${endpoint}`)
     .then(response => response.json())
-    .then(({items}) => items.map((books)=>{
-        const{volumeInfo} = books
-        console.log(volumeInfo)
-        return {volumeInfo}
-    }))
     
-    
+    .then(({ items }) => {
+        return items.map(book => {
+            const { title, authors } = book.volumeInfo;
+            
+            return { title, authors };
+        });
+    });
 }
 
 const pageContent = document.querySelector("#bookResults")
-console.log(pageContent)
+
+const searchButton = document.querySelector("#searchButton");
+const searchInput = document.querySelector("#movieTitle");
+
+searchButton.addEventListener("click", () => {
+    const title = searchInput.value; // Obtener el valor ingresado en el campo de entrada
+    
+
+    // Realizar la solicitud a la API de Google Books con el título ingresado
+    getBookFromApi(title)
+        .then(books => {
+            // Limpiar resultados anteriores
+            pageContent.innerHTML = "";
+
+            if (books.length === 0) {
+                // Si no se encontraron resultados, mostrar un mensaje
+                pageContent.innerHTML = "<p>No se encontraron resultados.</p>";
+            } else {
+                // Mostrar los resultados en la página
+                const template = books
+                    .map(libro => createCard(libro))
+                    .join("");
+                pageContent.innerHTML = template;
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+});
 
 
+const createCard = ({ title, authors }) => {
+    return `
+    <div class="row container m-1">
+        <div class="col-sm-6 mb-3 mb-sm-0 container">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">${title}</h5>
+                    <p class="card-text">${authors}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+};
 
-getBookFromApi()
 
+/* 
+
+const renderPage = async () =>{
+    firstPage = await getBookFromApi(`${valorIngresado}`)
+    const template = firstPage
+    .map(libro => createCard(libro))
+    .join("")
+    pageContent.innerHTML= template
+    
+}
+
+renderPage()
+*/
